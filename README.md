@@ -1,0 +1,1 @@
+My solutions to challenges given in the reddit page r/dailyprogrammer/. Usually solutions will be a single program in a file nammed [difficulty][Challenge Number].scala. Be warned some are works in progress.
