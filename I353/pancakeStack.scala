@@ -5,6 +5,7 @@ object Counter{
 }
 class Counter(var count: Int){
 	def value = count
+	override def toString = count.toString
 	def decrement{
 		count -= 1
 	}
@@ -16,12 +17,18 @@ object PancakeStack{
 		new PancakeStack(intStack map(key.indexOf(_)) map(Elem(_)),
 		 key map(e => intStack.count(_ == e)) map(Counter(_)), key)
 	}
-
-	def main(args: Array[String]){
-		val testStack = PancakeStack(Vector(7,8,2,7,7,4,3,100))
-	}
 }
 class PancakeStack(stack: Vector[Component], count: Vector[Counter], key: Vector[Int]){
-	override def toString = List(stack.mkString(","), count.mkString(","), key.mkString(",")).mkString(" | ")
+	override def toString = "Stack: " + stack.mkString(",") +
+	 "\nCounts: " + count.mkString(",") + "\nKey: " + key.mkString(",")
 
+}
+
+object PancakeStackUnitTest{
+	def main(args: Array[String]){
+		val testVector = Vector(7,8,2,7,7,4,3,100)
+		println("Testing with: " + Vector(7,8,2,7,7,4,3,100).mkString(","))
+		val testStack = PancakeStack(testVector)
+		println(testStack)
+	}
 }
