@@ -1,5 +1,5 @@
 package prefixReversals
-//import component.scala;
+
 object Counter{
 	def apply(n: Int) = new Counter(n)
 }
@@ -37,56 +37,78 @@ class PancakeStack(val stack: Vector[Component], counters: Vector[Counter], key:
 
 	def count(n: Int) = counters(n).value
 
+	def combine(first: Component, second: Component, counters: Vector[Counter]): Option[Component] = 
+		(first, second) match {
+			case (Elem(a, qa), Elem(b, qb)) if (a == b) => {
+				counters(a).decrement
+				Some(Elem(a, qa + qb))
+			}
+			case (first: Elem, second: Elem) =>{
+				if (consecutive(first, second)) Some(Block(true, first, second)) 
+				else if (consecutive(second, first)) Some(Block(false, second, first))
+				else None
+			}
+			case (Block(orient, low, mida), Block(thatOrient, midb, high)) if (orient == thatOrient) => {
+				if (if (orient) consecutive(first, second) else consecutive(second, first)) {
+					counters(mida.value).decrement
+					counters(midb.value).decrement
+					Some(Block(orient, low, high))
+				}
+				else None
+			}
+			case (Block(orient, low, mid), high: Elem) => {
+				if (orient && consecutive(first, second)) {
+					counters(mid.value).decrement
+					Some(Block(orient, low, high))
+				} else if (consecutive(second, first)){
+					counters(mid.value).decrement
+					Some(Block(orient, high, low))
+				}
+				else None
+			}
+			case (low: Elem, Block(orient, mid, high)) => {
+				if (orient && consecutive(first, second)) {
+					counters(mid.value).decrement
+					Some(Block(orient, low, high))
+				} else if (consecutive(second, first)){
+					counters(mid.value).decrement
+					Some(Block(orient, high, low))
+				}
+				else None
+			}
+			case _ => None
+		}
+
 	def compressed = {
 		val newCounter = counters map(_.clone)
 		def compressor(acc: (Component, Vector[Component]), next: Component): (Component, Vector[Component]) = {
 			val (partial, chain) = acc
-			if (next.orientatedWith(partial) && (consecutive(partial, next) || consecutive(next, partial))) {
-				val nextPartial = (partial, next) match {
-					case (Elem(a, qa), Elem(b, qb)) if (a == b) => {
-						newCounter(a).decrement
-						Elem(a, qa + qb)
-					}
-					case (Elem(a, qa), Elem(b, qb)) =>{
-						if (b == a + 1) Block(true, Elem(a, qa), Elem(b, qb)) 
-							else Block(false, Elem(b, qb), Elem(a, qa))
-					}
-					case (Block(true, low, mida), Block(_, midb, high)) => {
-						newCounter(mida.value).decrement
-						newCounter(midb.value).decrement
-						Block(true, low, high)
-					}
-					case (Block(false, mida, high), Block(_, low, midb)) => {
-						newCounter(mida.value).decrement
-						newCounter(midb.value).decrement
-						Block(false, low, high)
-					}
-					case (Block(true, low, mid), high: Elem) =>{
-						newCounter(mid.value).decrement
-						Block(true, low, high)
-					}
-					case (Block(false, mid, high), low: Elem) => {
-						newCounter(mid.value).decrement
-						Block(false, low, high)
-					}
-					case (low: Elem, Block(true, mid, high)) =>{
-						newCounter(mid.value).decrement
-						Block(true, low, high)
-					}
-					case (high: Elem, Block(false, low, mid)) => {
-						newCounter(mid.value).decrement
-						Block(true, low, high)
-					}
-				}
-				(nextPartial, chain)
-			} else (next, chain :+ partial)
+			combine(partial, next, newCounter) match {
+				case Some(nextPartial) => (nextPartial, chain)
+				case None => (next, chain :+ partial)
+			}
 		}
 
 		val (last, chain) = stack.tail.foldLeft(stack.head: Component, Vector(): Vector[Component]) (compressor)
 		new PancakeStack(chain :+ last, newCounter, key)
 	}
 
-	def swap(index: Int) = {}
+	def swap(index: Int) = {
+		def flip(li: Vector[Component]) = li.tail.foldLeft(Vector(li.head.reverse)) ((acc, e) => e.reverse +: acc)
+		val (a, b) = (stack(0).reverse, stack(index + 1))
+		val newCounter = counters map(_.clone)
+		combine(a, b, newCounter) match {
+			case Some(combined) => {
+				val newStack = (flip(stack.slice(1, index + 1)) :+ combined) ++
+					stack.slice(index + 2, stack.length)
+				new PancakeStack(newStack, newCounter, key)
+			}
+			case None => {
+				val newStack = flip(stack.slice(0, index + 1)) ++ stack.slice(index + 1, stack.length)
+				new PancakeStack(newStack, counters, key)
+			}
+		}
+	}
 }
 
 object PancakeStackUnitTest{
@@ -95,10 +117,13 @@ object PancakeStackUnitTest{
 		println("Testing with: " + Vector(7,8,2,7,7,4,3,100).mkString(","))
 
 		val testStack = PancakeStack(testVector)
-		println("\n Before Compression \n" + testStack + "\n")
+		println("\nBefore Compression \n" + testStack + "\n")
 		println("'First two elements are consecutive' is " + testStack.consecutive(testStack.stack(0), testStack.stack(1)))
 		println("'Second two elements are consecutive' is " + testStack.consecutive(testStack.stack(1), testStack.stack(2)))
 
-		println("\n After Compression: " + testStack.compressed)
+		println("\nAfter Compression: \n" + testStack.compressed)
+
+		val swapIndex = 2
+		println(f"\nTesting Swap at Index $swapIndex: \n" + testStack.compressed.swap(swapIndex))
 	}
 }
