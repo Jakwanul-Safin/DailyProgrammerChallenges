@@ -3,28 +3,16 @@ object ComponentUnitTest{
 		println(blockify(Vector(1, 2, 4, 3, 5, 6)))
 	}
 
-
-	def step(stack: Vector[Component]) = help(stack) match {
-		case (Elem(t), iN, E(tN), _, _) => stack.slice(1, iN - 1).reverse :+ Block(true, t, tN) ++ stack.slice(iN + 1, stack.length)
-		case (Elem(t), iN, Block(true, _, h), _, _) => stack.slice(1, iN - 1).reverse :+ Block(true, t, h) ++ stack.slice(iN + 1, stack.length)
-		case (Elem(t), _, _, iP, E(tP)) => stack.slice(1, iP - 1).reverse :+ Block(true, t, tP) ++ stack.slice(iP + 1, stack.length)
-		case (Elem(t), _, _, iP, Block(false, l, _)) => stack.slice(1, iP - 1).reverse :+ Block(false, l, t) ++ stack.slice(iP + 1, stack.length)
-		case (Elem(t), iN, Block(_, _ h), Block(_, l _))
-
-
-			help(t) match {
-				case (_, _, iN, Elem(tN)) => stack.slice(1, index - 1).reverse :+ Block(true, t, tN) 
-					++ stack.slice(index + 1, stack.length)
-				case (_, _, iN, Elem(tN)) => stack.slice(1, index - 1).reverse :+ Block(true, t, tN) 
-					++ stack.slice(index + 1, stack.length)
-				case (index, Block(true, tN, h)) => stack.slice(1, index - 1).reverse :+ Block(true, t, h) 
-					++ stack.slice(index + 1, stack.length)
-				case (index, Block(false, tN, h)) => prev(t) 
-			}
-		case _ => 
+	class Counter(var count: Int){
+		def value = count
+		def decrement{count -= 1}
 	}
 
-	def help(stack: Vector[Component]) = ()
+	def sortWithCount(li: Vector[Int]) = li.sorted.distinct map{x => (x, new Counter(li.count(_==x)))}
+
+	def ordinalMap(stack: Vector[Int]) = {
+		
+	}
 
 	def blockify(stack: Vector[Int]) = {
 
