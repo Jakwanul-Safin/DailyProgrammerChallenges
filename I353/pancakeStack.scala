@@ -85,16 +85,20 @@ class PancakeStack(val stack: Vector[Component], counters: Vector[Counter], key:
 		val (last, chain) = stack.tail.foldLeft(stack.head: Component, Vector(): Vector[Component]) (compressor)
 		new PancakeStack(chain :+ last, newCounter, key)
 	}
+
+	def swap(index: Int) = {}
 }
 
 object PancakeStackUnitTest{
 	def main(args: Array[String]){
 		val testVector = Vector(7,8,2,7,7,4,3,100)
 		println("Testing with: " + Vector(7,8,2,7,7,4,3,100).mkString(","))
+
 		val testStack = PancakeStack(testVector)
-		println(testStack)
-		println("'First two elements consecutive' is " + testStack.consecutive(testStack.stack(0), testStack.stack(1)))
-		println("'Second two elements consecutive' is " + testStack.consecutive(testStack.stack(1), testStack.stack(2)))
-		println(testStack.compressed)
+		println("\n Before Compression \n" + testStack + "\n")
+		println("'First two elements are consecutive' is " + testStack.consecutive(testStack.stack(0), testStack.stack(1)))
+		println("'Second two elements are consecutive' is " + testStack.consecutive(testStack.stack(1), testStack.stack(2)))
+
+		println("\n After Compression: " + testStack.compressed)
 	}
 }
