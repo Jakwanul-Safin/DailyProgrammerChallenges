@@ -24,19 +24,24 @@ class PancakeStack(val stack: Vector[Component], counters: Vector[Counter], key:
 	 "\nCounts: " + counters.mkString(",") + "\nKey: " + key.mkString(",")
 
 	def consecutive(first: Component, sec: Component) = (first, sec) match {
-		case (_, Elem(b, _)) => {
-			val a = first.max
-			b == a || ((count(a) == 1 || count(b) == 1) && b == a + 1) 
-		}
-		case (Elem(a, _), _) => {
-			val b = sec.min
-			b == a || ((count(a) == 1 || count(b) == 1) && b == a + 1) 
-		}
-		case (Block(_, _, Elem(a, _)), Block(_, Elem(b, _), _)) => (count(a) == 1 && count(b) == 1 && b == a + 1)
+		case (Elem(a, _), Elem(b, _)) => 
+			b == a || b == a + 1 && (count(a) == 1 || count(b) == 1) 
+		case (Block(_, Elem(l, _), Elem(a, _)), Elem(b, _)) =>
+			b == a || b == a + 1 && count(a) == 1 
+		case (Elem(a, _), Block(_, Elem(b, _), Elem(h, _))) =>
+			b == a || b == a + 1 && count(b) == 1 
+		case (Block(_, _, Elem(a, _)), Block(_, Elem(b, _), _)) => 
+			b == a && count(b) == 2 || b == a + 1 && count(a) == 1 && count(b) == 1
 		case (_, _) => false
 	}
 
 	def count(n: Int) = counters(n).value
+
+	def compressed = {
+		//TO DO
+		//val newCounter = counters map()
+		//def compressor(acc: (Component, Vector[Component]), next: Component): (Component, Vector[Component]) = {}
+	}
 }
 
 object PancakeStackUnitTest{
