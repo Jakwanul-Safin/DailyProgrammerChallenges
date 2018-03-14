@@ -19,9 +19,25 @@ object PancakeStack{
 		 key map(e => intStack.count(_ == e)) map(Counter(_)), key)
 	}
 }
-class PancakeStack(val stack: Vector[Component], counters: Vector[Counter], key: Vector[Int]){
-	override def toString = "Stack: " + stack.mkString(",") +
-	 "\nCounts: " + counters.mkString(",") + "\nKey: " + key.mkString(",")
+
+class PancakeStack(val stack: Vector[Component], val counters: Vector[Counter], key: Vector[Int]){
+	override def toString = 
+		"Stack: " + stack.mkString(",") +
+	 	"\nCounts: " + counters.mkString(",") + 
+	 	"\nKey: " + key.mkString(",")
+
+	def decode(count: Vector[Counter]) = {
+		def decodePart(comp: Component) : Vector[Int]= comp match {
+			case Elem(a, q) => Vector.fill(q)(a)
+			case block@Block(orient, low, high) => {
+				val sequence = block.toSeq.toVector
+				decodePart(if (block.orientated) block.low else block.high) ++ 
+				sequence.tail.init.map(a => Vector.fill(count(a).value)(a)).fold(Vector()) (_++_) ++
+				decodePart(if (block.orientated) block.high else block.low)
+			}
+		}
+		stack.map(decodePart).fold(Vector())(_++_).map(key(_))
+	}
 
 	def consecutive(first: Component, sec: Component) = (first, sec) match {
 		case (Elem(a, _), Elem(b, _)) => 
@@ -37,7 +53,8 @@ class PancakeStack(val stack: Vector[Component], counters: Vector[Counter], key:
 
 	def count(n: Int) = counters(n).value
 
-	def combine(first: Component, second: Component, counters: Vector[Counter]): Option[Component] = 
+	def combine(first: Component, second: Component, counters: Vector[Counter]): Option[Component] ={
+		def helper(a: Elem, b: Elem) = if (a.value == b.value) Elem(a.value, b.amount + a.amount) else a
 		(first, second) match {
 			case (Elem(a, qa), Elem(b, qb)) if (a == b) => {
 				counters(a).decrement
@@ -59,25 +76,26 @@ class PancakeStack(val stack: Vector[Component], counters: Vector[Counter], key:
 			case (Block(orient, low, mid), high: Elem) => {
 				if (orient && consecutive(first, second)) {
 					counters(mid.value).decrement
-					Some(Block(orient, low, high))
+					Some(Block(orient, low, helper(high, mid)))
 				} else if (consecutive(second, first)){
-					counters(mid.value).decrement
-					Some(Block(orient, high, low))
+					counters(low.value).decrement
+					Some(Block(orient, high, helper(mid, low)))
 				}
 				else None
 			}
 			case (low: Elem, Block(orient, mid, high)) => {
 				if (orient && consecutive(first, second)) {
 					counters(mid.value).decrement
-					Some(Block(orient, low, high))
+					Some(Block(orient, low, helper(high, mid)))
 				} else if (consecutive(second, first)){
-					counters(mid.value).decrement
-					Some(Block(orient, high, low))
+					counters(high.value).decrement
+					Some(Block(orient, mid, helper(low, high)))
 				}
 				else None
 			}
 			case _ => None
 		}
+	}
 
 	def compressed = {
 		val newCounter = counters map(_.clone)
@@ -113,8 +131,8 @@ class PancakeStack(val stack: Vector[Component], counters: Vector[Counter], key:
 
 object PancakeStackUnitTest{
 	def main(args: Array[String]){
-		val testVector = Vector(7,8,2,7,7,4,3,100)
-		println("Testing with: " + Vector(7,8,2,7,7,4,3,100).mkString(","))
+		val testVector = Vector(7, 8, 90, 90, 2,7,7,4,3,100)
+		println("Testing with: " + testVector.mkString(","))
 
 		val testStack = PancakeStack(testVector)
 		println("\nBefore Compression \n" + testStack + "\n")
@@ -124,6 +142,8 @@ object PancakeStackUnitTest{
 		println("\nAfter Compression: \n" + testStack.compressed)
 
 		val swapIndex = 2
-		println(f"\nTesting Swap at Index $swapIndex: \n" + testStack.compressed.swap(swapIndex))
+		val transformed = testStack.compressed.swap(swapIndex)
+		println(f"\nTesting Swap at Index $swapIndex: \n" + transformed.toString)
+		println("Decoded that is: \n" + transformed.decode(testStack.counters).mkString(","))
 	}
 }

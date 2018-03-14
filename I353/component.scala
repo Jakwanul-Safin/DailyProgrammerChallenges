@@ -20,7 +20,7 @@ case class Block(val orientated: Boolean, val low: Elem, val high: Elem) extends
 	def contains(n: Int) = (n >= low.value && n<= high.value)
 	def min = low.value
 	def max = high.value
-	def toList = (low.value to high.value by {if (orientated) 1 else -1})
+	def toSeq = if (orientated) (low.value to high.value) else (low.value to high.value).reverse
 	def orientatedWith(that: Component) = that match {
 		case Elem(_, _) => true
 		case Block(thatOrientated, _, _) => orientated == thatOrientated
