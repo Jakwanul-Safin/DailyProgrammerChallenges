@@ -18,15 +18,46 @@ object PancakeStack{
 		new PancakeStack(intStack map(key.indexOf(_)) map(Elem(_)),
 		 key map(e => intStack.count(_ == e)) map(Counter(_)), key)
 	}
+
+	def naiveSolution(start: PancakeStack): Vector[Vector[Component]] = {
+		val stack = start.stack
+		if (stack.isEmpty) Vector(Vector())
+		else {
+			val max = stack.maxBy(_.max)
+			val maxIndex = stack.indexOf(max)
+			if (stack.last == max && max.properlyOrientated) {
+				val newCounter = start.counters.map(_.clone)
+				max match {
+					case Elem(a, _) => newCounter(a).decrement
+					case Block(_, a, b) => {
+						newCounter(a.value).decrement
+						newCounter(b.value).decrement
+					}
+				}
+				val next = new PancakeStack(stack.init, newCounter, Vector())
+				naiveSolution(next).map(_:+max)
+			} else maxIndex match {
+				case 0 if (!max.properlyOrientated) => {
+					val next = start.swap(stack.length - 1)
+					stack +: naiveSolution(next)
+				}
+				case _ => {
+					val next = start.swap(maxIndex)
+					stack +: naiveSolution(next)
+				}
+			}
+		}
+	}
+
 }
 
-class PancakeStack(val stack: Vector[Component], val counters: Vector[Counter], key: Vector[Int]){
+class PancakeStack(val stack: Vector[Component], val counters: Vector[Counter], val key: Vector[Int]){
 	override def toString = 
 		"Stack: " + stack.mkString(",") +
 	 	"\nCounts: " + counters.mkString(",") + 
 	 	"\nKey: " + key.mkString(",")
 
-	def decode(count: Vector[Counter]) = {
+	def decode(count: Vector[Counter] = counters) = {
 		def decodePart(comp: Component) : Vector[Int]= comp match {
 			case Elem(a, q) => Vector.fill(q)(a)
 			case block@Block(orient, low, high) => {
@@ -112,21 +143,25 @@ class PancakeStack(val stack: Vector[Component], val counters: Vector[Counter], 
 	}
 
 	def swap(index: Int) = {
-		def flip(li: Vector[Component]) = li.tail.foldLeft(Vector(li.head.reverse)) ((acc, e) => e.reverse +: acc)
-		val (a, b) = (stack(0).reverse, stack(index + 1))
-		val newCounter = counters map(_.clone)
-		combine(a, b, newCounter) match {
-			case Some(combined) => {
-				val newStack = (flip(stack.slice(1, index + 1)) :+ combined) ++
-					stack.slice(index + 2, stack.length)
-				new PancakeStack(newStack, newCounter, key)
-			}
-			case None => {
-				val newStack = flip(stack.slice(0, index + 1)) ++ stack.slice(index + 1, stack.length)
-				new PancakeStack(newStack, counters, key)
-			}
+		def flip(li: Vector[Component]) = li.foldLeft(Vector(): Vector[Component]) ((acc, e) => e.reverse +: acc)
+		if (index == stack.length - 1) new PancakeStack(flip(stack), counters.map(_.clone), key)
+		else {
+			val (a, b) = (stack(0).reverse, stack(index + 1))
+			val newCounter = counters map(_.clone)
+			combine(a, b, newCounter) match {
+				case Some(combined) => {
+					val newStack = (flip(stack.slice(1, index + 1)) :+ combined) ++
+						stack.slice(index + 2, stack.length)
+					new PancakeStack(newStack, newCounter, key)
+				}
+				case None => {
+					val newStack = flip(stack.slice(0, index + 1)) ++ stack.slice(index + 1, stack.length)
+					new PancakeStack(newStack, counters, key)
+				}
+		}
 		}
 	}
+
 }
 
 object PancakeStackUnitTest{
@@ -145,5 +180,8 @@ object PancakeStackUnitTest{
 		val transformed = testStack.compressed.swap(swapIndex)
 		println(f"\nTesting Swap at Index $swapIndex: \n" + transformed.toString)
 		println("Decoded that is: \n" + transformed.decode(testStack.counters).mkString(","))
+
+		val solution = PancakeStack.naiveSolution(testStack.compressed).map(new PancakeStack(_, testStack.counters, testStack.key)).map(_.decode())
+		println("Solution is: \n" + solution.mkString("\n"))
 	}
 }
