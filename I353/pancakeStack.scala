@@ -25,7 +25,10 @@ object PancakeStack{
 		else {
 			val max = stack.maxBy(_.max)
 			val maxIndex = stack.indexOf(max)
-			if (stack.last == max && max.properlyOrientated) {
+			println(stack)
+			println(max)
+			println()
+			if (stack.last.max == max.max && max.properlyOrientated) {
 				val newCounter = start.counters.map(_.clone)
 				max match {
 					case Elem(a, _) => newCounter(a).decrement
@@ -37,7 +40,7 @@ object PancakeStack{
 				val next = new PancakeStack(stack.init, newCounter, Vector())
 				naiveSolution(next).map(_:+max)
 			} else maxIndex match {
-				case 0 if (!max.properlyOrientated) => {
+				case 0 if (max.reverse.properlyOrientated) => {
 					val next = start.swap(stack.length - 1)
 					stack +: naiveSolution(next)
 				}
@@ -166,7 +169,7 @@ class PancakeStack(val stack: Vector[Component], val counters: Vector[Counter], 
 
 object PancakeStackUnitTest{
 	def main(args: Array[String]){
-		val testVector = Vector(7, 8, 90, 90, 2,7,7,4,3,100)
+		val testVector = Vector(7,6,4,2,6,7,8,7)
 		println("Testing with: " + testVector.mkString(","))
 
 		val testStack = PancakeStack(testVector)
