@@ -34,7 +34,7 @@ object H354{
 	}
 
 	def main(args: Array[String]) {
-		val data = (1 to 32887) map(integerComplexity(_)) filter(
+		val data = (1 to 1000) map(integerComplexity(_)) filter(
 			x => x match {
 				case Sum(_, 1) => true
 				case _ => true
@@ -42,7 +42,7 @@ object H354{
 		) map(x => (x.number, x, x.decomposition, x.complexity))
 		//data foreach println
 		//println(f"The total is $total with $prods products, $sums sums and $specials of a specified type")
-		val love = Vector(113, 145, 243, 4, 97, 243, 3, 10962).map(integerComplexity(_).complexity).sum + 5
+		val love = Vector(10, 1000).map(integerComplexity(_).complexity)
 		println(love)
 	}
 

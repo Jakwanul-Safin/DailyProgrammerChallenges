@@ -41,7 +41,7 @@ object H354{
 			//val toCheck = fastTriplets(n).toVector.slice(0, limit)
 			for ((a, b, c) <- toCheck if (3 * log3(a) + integerComplexity(b) + integerComplexity(c) < upperlimit)){
 				val lag = integerComplexity(b) + integerComplexity(c)
-				val potential = solve(a, upperlimit - lag, if (limit == 0) 0 else limit - 1) + lag
+				val potential = solve(a, upperlimit - lag, if (limit == 1) 1 else limit - 1) + lag
 				upperlimit = 
 					if (upperlimit > potential) potential
 					else upperlimit
@@ -107,7 +107,9 @@ object H354{
 		//println(time{fastComplexity(1000205)})
 		//println((1000000 to 1000100) map(fastComplexity(_)))
 		//println((1000000 to 1000100) map(integerComplexity(_)))
-		println(time{solveWithBreak(BigInt("12345678910111213"))}) // At most 78910111213 - 77
+		println(time{solve(BigInt("12345678910111213"))}) // At most 78910111213 - 77
+		println(time{solveWithBreak(BigInt("1234567891011121314"))})
+		println(time{solveWithBreak(BigInt("123456789101112131415"))})
 	}
 
 	def time[R](block: => R): R = {  
